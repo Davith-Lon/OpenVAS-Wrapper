@@ -1,0 +1,13 @@
+<!-- gvm-cli  -->
+
+gvm-cli socket --xml "<create_target><name>Suspect Host</name><hosts>"$IPADDRESS"</hosts></create_target>"
+
+gvm-cli socket --xml "<create_task><name>Scan Suspect Host</name><target id=\"e5adc10c-71d0-49fe-aacf-a442ee31d387\"/><config id=\"daba56c8-73ec-11df-a475-002264764cea\"/><scanner id=\"08b69003-5fc2-4037-a479-93b440211c73\"/></create_task>"
+
+gvm-cli socket --xml "<start_task task_id=\"7249a07c-03e1-4197-99e4-a3a9ab5b7c3b\"/>"
+
+gvm-cli socket --xml "<get_tasks task_id=\"7249a07c-03e1-4197-99e4-a3a9ab5b7c3b\"/>"
+
+gvm-cli socket --xml "<get_report_formats/>"
+
+gvm-cli socket --xml "<get_reports report_id=\"0f9ea6ca-abf5-4139-a772-cb68937cdfbb\" format_id=\"c402cc3e-b531-11e1-9163-406186ea4fc5\"/>"
