@@ -4,6 +4,8 @@ class Gvm{
     [securestring] $GvmPassword
     hidden [string] $BaseCommand
     hidden [xml] $CreateTargetXML = "<create_target><name></name><hosts></hosts></create_target>"
+    hidden [xml] $GetScannersXML = '<get_scanners/>' # FIX ME: This will return everything. Implement further.
+    hidden [xml] $GetConfigXML = '<get_configs/>'
     #hidden [xml] $CreateTaskXML = "<create_task><name></name><target id=\/><config id=\/><scanner id=\/></create_task>"
     #hidden [xml] $StartTaskXML = "<start_task task_id=\/>"
     #hidden [xml] $GetTaskStatus = "<get_tasks task_id=\/>"
@@ -19,13 +21,40 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
 "@
     }
 
-    [string] CreateTarget([string] $Name, [string] $Hostname) {
+    [xml] CreateTarget([string] $Name, [string] $Hostname) {
             $XML = $this.CreateTargetXML
             $XML.create_target.name = $Name
             $XML.create_target.hosts = $Hostname
             #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
             $Response = [xml]'<create_target_response status="201" status_text="OK, resource created" id="254cd3ef-bbe1-4d58-859d-21b8d0c046c6"/>'
             return [xml] $Response
+    }
+
+    [xml] GetScanners(){
+        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetScannersXML)
+        $Response = '<get_scanners_response status="200" status_text="OK">
+<scanner id="c33864a9-d3fd-44b3-8717-972bfb01dfcf">
+<name>Default Scanner</name>
+<comment/>
+<creation_time>2014-01-01T13:57:25+01:00</creation_time>
+<modification_time>2014-01-18T12:07:36+01:00</modification_time>
+<writable>0</writable>
+<in_use>1</in_use>
+<host>localhost</host>
+<port>9391</port>
+<type>2</type>
+<tasks>
+<task id="813864a9-d3fd-44b3-8717-972bfb01dfc0">
+<name>Debian desktops</name>
+</scanner>
+<truncate>...</truncate>
+</get_scanners_response>'
+        return [xml] $Response
+    }
+
+    [xml] GetConfigs(){
+        $Response = ''
+        return [xml] $Response
     }
 
     [xml] CreateTask([string] $Name, [string] $TargetID, [string] $ConfigID, [string] $ScannerID){
