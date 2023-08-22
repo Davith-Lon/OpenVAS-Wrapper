@@ -25,74 +25,49 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
             $XML.create_target.hosts = $Hostname
             #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
             $Response = [xml]'<create_target_response status="201" status_text="OK, resource created" id="254cd3ef-bbe1-4d58-859d-21b8d0c046c6"/>'
-            if($Response.create_target_response.status -ne '201'){
-                throw "ERROR: Failed to create target. Response status $($Response.create_target_response.status)"
-            } else {return $Response.create_target_response.id}
+            return [xml] $Response
     }
 
-    [string] CreateTask([string] $Name, [string] $TargetID, [string] $ConfigID, [string] $ScannerID){
+    [xml] CreateTask([string] $Name, [string] $TargetID, [string] $ConfigID, [string] $ScannerID){
         $XML = $this.CreateTaskXML
         $XML.create_task.name = $Name
         $XML.create_task.target_id = $TargetID
         $XML.create_task.config_id =  $ConfigID
         $XML.create_task.scanner_id = $ScannerID
         #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
-        $Response = ''
-        if($Response -ne '201'){
-            throw "ERROR: Failed to create target. Response status $($Response)"
-        }else{return $Response}
+        $Response = '<create_task_response status="201" status_text="OK, resource created" id="7249a07c-03e1-4197-99e4-a3a9ab5b7c3b"/>'
+        return [xml] $Response
     }
 
-    [string] StartTask([string] $TargetId){
-        $XML = $this.CreateTaskXML
+    [xml] StartTask([string] $Name, [string] $TargetId, [string] $ConfigID, [string] $ScannerID){
+        $XML = $this.StartTaskXML
         $XML.create_task.name = $Name
         $XML.create_task.target_id = $TargetID
         $XML.create_task.config_id =  $ConfigID
         $XML.create_task.scanner_id = $ScannerID
         #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
-        $Response = ''
-        if($Response -ne '201'){
-            throw "ERROR: Failed to create target. Response status $($Response)"
-        }else{return $Response}
+        $Response = '<start_task_response status="202" status_text="OK, request submitted"><report_id>0f9ea6ca-abf5-4139-a772-cb68937cdfbb</report_id></start_task_response>'
+        return [xml] $Response
     }
 
-    [string] GetTaskStatus([string] $TargetId){
-        $XML = $this.CreateTaskXML
-        $XML.create_task.name = $Name
-        $XML.create_task.target_id = $TargetID
-        $XML.create_task.config_id =  $ConfigID
-        $XML.create_task.scanner_id = $ScannerID
+    [xml] GetTaskStatus([string] $TaskID){
+        $XML = $this.GetTaskStatusXML
+        $XML.get_tasks.task_id = $TaskID
         #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
-        $Response = ''
-        if($Response -ne '201'){
-            throw "ERROR: Failed to create target. Response status $($Response)"
-        }else{return $Response}
+        $Response = '<get_tasks_response status="200" status_text="OK"><status>Running</status><progress>98</progress><get_tasks_response/>'
+        return [xml] $Response
     }
 
-    [string] GetReportFormat([string] $TargetId){
-        $XML = $this.CreateTaskXML
-        $XML.create_task.name = $Name
-        $XML.create_task.target_id = $TargetID
-        $XML.create_task.config_id =  $ConfigID
-        $XML.create_task.scanner_id = $ScannerID
-        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
-        $Response = ''
-        if($Response -ne '201'){
-            throw "ERROR: Failed to create target. Response status $($Response)"
-        }else{return $Response}
+    [xml] GetReportFormat(){
+        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetReportFormatXML)
+        $Response = '<get_report_formats_response status="200" status_text="OK"><report_format id="5057e5cc-b825-11e4-9d0e-28d24461215b"></get_report_formats_response>'
+        return [xml] $Response
     }
 
-    [string] GetReport([string] $TargetId){
-        $XML = $this.CreateTaskXML
-        $XML.create_task.name = $Name
-        $XML.create_task.target_id = $TargetID
-        $XML.create_task.config_id =  $ConfigID
-        $XML.create_task.scanner_id = $ScannerID
-        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
+    [xml] GetReport(){
+        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetReportXML)
         $Response = ''
-        if($Response -ne '201'){
-            throw "ERROR: Failed to create target. Response status $($Response)"
-        }else{return $Response}
+        return [xml] $Response
     }
 }
 
