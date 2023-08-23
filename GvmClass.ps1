@@ -44,17 +44,17 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
     }
 
     [xml] GetScanners(){
-        Write-Host "Invoking...`n $($this.BaseCommand + $this.GetScannersXML.OuterXml)"
+        Write-Host "Invoking...`n `"$($this.BaseCommand + $this.GetScannersXML.OuterXml)`""
         #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetScannersXML)
-        $Response = [xml](Invoke-Expression -Command "$($this.BaseCommand + $this.GetScannersXML.OuterXml)")
-        return [xml] $Response
+        $Response = (Invoke-Expression -Command "$($this.BaseCommand + '"' + $this.GetScannersXML.OuterXml + '"')")
+        return $Response
     }
 
     [xml] GetConfigs(){
         Write-Host "Invoking...`n $($this.BaseCommand + $this.GetConfigXML.OuterXml)"
         #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetConfigXML)
-        $Response = ''
-        return [xml] $Response
+        $Response = (Invoke-Expression -Command "$($this.BaseCommand + '"' + $this.GetConfigXML.OuterXml + '"')")
+        return $Response
     }
 
     [xml] CreateTask([string] $Name, [string] $TargetID, [string] $ConfigID, [string] $ScannerID){
