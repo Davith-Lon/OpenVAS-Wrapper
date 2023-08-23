@@ -1,4 +1,4 @@
-Import-Module ./GvmClass.ps1 -Force
+Import-Module "C:\Users\davit\Dev\OpenVAS-Wrapper\GvmClass.ps1" -Force
 
 $GVM = [Gvm]::new("admin", (ConvertTo-SecureString -AsPlainText "PASSWORD"))
 
