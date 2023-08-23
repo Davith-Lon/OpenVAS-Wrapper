@@ -39,14 +39,14 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
             $XML.create_target.hosts = $Hostname
             Write-Host "Invoking...`n $($this.BaseCommand + $XML.OuterXml)"
             #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
-            $Response = [xml]''
+            $Response = [xml] (Invoke-Expression -Command "$($this.BaseCommand + $XML.OuterXml)")
             return [xml] $Response
     }
 
     [xml] GetScanners(){
         Write-Host "Invoking...`n $($this.BaseCommand + $this.GetScannersXML.OuterXml)"
         #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetScannersXML)
-        $Response = ''
+        $Response = [xml](Invoke-Expression -Command "$($this.BaseCommand + $this.GetScannersXML.OuterXml)")
         return [xml] $Response
     }
 
