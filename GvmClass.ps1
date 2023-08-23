@@ -1,16 +1,28 @@
+<#
+    .SYNOPSIS
+        This is a partial wrapper for the gvm-cli to enable automation of OpenVAS with Powershell.
+    .DESCRIPTION
+        This implementation purely return the output of the invoked gvm-cli command without any
+        processing or validating.
+    .NOTES
+        This implementation assumes it will be ran locally on the OpenVAS machine, as it uses a socket
+        connection and doesn't have SSH added right now (TBD).
+        ~ John Titor
+#>
+
 class Gvm{
     # This Class implementation ONLY uses socket connection.
     [string] $GvmUsername
     [securestring] $GvmPassword
     hidden [string] $BaseCommand
     hidden [xml] $CreateTargetXML = "<create_target><name></name><hosts></hosts></create_target>"
-    hidden [xml] $GetScannersXML = '<get_scanners/>' # FIX ME: This will return everything. Implement further.
+    hidden [xml] $GetScannersXML = '<get_scanners/>'
     hidden [xml] $GetConfigXML = '<get_configs/>'
-    #hidden [xml] $CreateTaskXML = "<create_task><name></name><target id=\/><config id=\/><scanner id=\/></create_task>"
-    #hidden [xml] $StartTaskXML = "<start_task task_id=\/>"
-    #hidden [xml] $GetTaskStatus = "<get_tasks task_id=\/>"
+    hidden [xml] $CreateTaskXML = "<create_task><name></name><target id=''/><config id=''/><scanner id=''/></create_task>"
+    hidden [xml] $StartTaskXML = "<start_task task_id=''/>"
+    hidden [xml] $GetTaskStatus = "<get_tasks task_id=''/>"
     hidden [xml] $GetReportFormatXML = "<get_report_formats/>"
-    hidden [xml] $GetReportXML = "<get_reports/>"
+    hidden [xml] $GetReportXML = "<get_reports report_id='' format_id=''/>"
 
     Gvm([string]$GvmUsername, [securestring]$GvmPassword){
         $this.GvmUsername = $GvmUsername
@@ -25,34 +37,22 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
             $XML = $this.CreateTargetXML
             $XML.create_target.name = $Name
             $XML.create_target.hosts = $Hostname
+            Write-Host "Invoking...`n $($this.BaseCommand + $XML)"
             #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
-            $Response = [xml]'<create_target_response status="201" status_text="OK, resource created" id="254cd3ef-bbe1-4d58-859d-21b8d0c046c6"/>'
+            $Response = [xml]''
             return [xml] $Response
     }
 
     [xml] GetScanners(){
+        Write-Host "Invoking...`n $($this.BaseCommand + $this.GetScannersXML)"
         #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetScannersXML)
-        $Response = '<get_scanners_response status="200" status_text="OK">
-<scanner id="c33864a9-d3fd-44b3-8717-972bfb01dfcf">
-<name>Default Scanner</name>
-<comment/>
-<creation_time>2014-01-01T13:57:25+01:00</creation_time>
-<modification_time>2014-01-18T12:07:36+01:00</modification_time>
-<writable>0</writable>
-<in_use>1</in_use>
-<host>localhost</host>
-<port>9391</port>
-<type>2</type>
-<tasks>
-<task id="813864a9-d3fd-44b3-8717-972bfb01dfc0">
-<name>Debian desktops</name>
-</scanner>
-<truncate>...</truncate>
-</get_scanners_response>'
+        $Response = ''
         return [xml] $Response
     }
 
     [xml] GetConfigs(){
+        Write-Host "Invoking...`n $($this.BaseCommand + $this.GetConfigXML)"
+        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetConfigXML)
         $Response = ''
         return [xml] $Response
     }
@@ -60,41 +60,46 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
     [xml] CreateTask([string] $Name, [string] $TargetID, [string] $ConfigID, [string] $ScannerID){
         $XML = $this.CreateTaskXML
         $XML.create_task.name = $Name
-        $XML.create_task.target_id = $TargetID
-        $XML.create_task.config_id =  $ConfigID
-        $XML.create_task.scanner_id = $ScannerID
+        $XML.create_task.target.id = $TargetID
+        $XML.create_task.config.id =  $ConfigID
+        $XML.create_task.scanner.id = $ScannerID
+        Write-Host "Invoking...`n $($this.BaseCommand + $XML)"
         #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
-        $Response = '<create_task_response status="201" status_text="OK, resource created" id="7249a07c-03e1-4197-99e4-a3a9ab5b7c3b"/>'
+        $Response = ''
         return [xml] $Response
     }
 
-    [xml] StartTask([string] $Name, [string] $TargetId, [string] $ConfigID, [string] $ScannerID){
+    [xml] StartTask([string] $TaskID){
         $XML = $this.StartTaskXML
-        $XML.create_task.name = $Name
-        $XML.create_task.target_id = $TargetID
-        $XML.create_task.config_id =  $ConfigID
-        $XML.create_task.scanner_id = $ScannerID
+        $XML.start_task.task_id = $TaskID
+        Write-Host "Invoking...`n $($this.BaseCommand + $XML)"
         #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
-        $Response = '<start_task_response status="202" status_text="OK, request submitted"><report_id>0f9ea6ca-abf5-4139-a772-cb68937cdfbb</report_id></start_task_response>'
+        $Response = ''
         return [xml] $Response
     }
 
     [xml] GetTaskStatus([string] $TaskID){
         $XML = $this.GetTaskStatusXML
         $XML.get_tasks.task_id = $TaskID
+        Write-Host "Invoking...`n $($this.BaseCommand + $XML)"
         #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
-        $Response = '<get_tasks_response status="200" status_text="OK"><status>Running</status><progress>98</progress><get_tasks_response/>'
+        $Response = ''
         return [xml] $Response
     }
 
     [xml] GetReportFormat(){
+        Write-Host "Invoking...`n $($this.BaseCommand + $this.GetReportFormatXML)"
         #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetReportFormatXML)
-        $Response = '<get_report_formats_response status="200" status_text="OK"><report_format id="5057e5cc-b825-11e4-9d0e-28d24461215b"></get_report_formats_response>'
+        $Response = ''
         return [xml] $Response
     }
 
-    [xml] GetReport(){
-        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetReportXML)
+    [xml] GetReport([string] $ReportID, [string] $FormatID){
+        $XML = $this.GetReportXML
+        $XML.get_reports.report_id = $ReportID
+        $XML.get_reports.format_id = $FormatID
+        Write-Host "Invoking...`n $($this.BaseCommand + $XML)"
+        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
         $Response = ''
         return [xml] $Response
     }
