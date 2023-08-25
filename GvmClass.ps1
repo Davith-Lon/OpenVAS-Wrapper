@@ -15,7 +15,8 @@ class Gvm{
     [string] $GvmUsername
     [securestring] $GvmPassword
     hidden [string] $BaseCommand
-    hidden [xml] $CreateTargetXML = "<create_target><name></name><hosts></hosts></create_target>"
+    hidden [xml] $GetPortListsXML = '<get_port_lists/>'
+    hidden [xml] $CreateTargetXML = "<create_target><name></name><hosts></hosts><port_list id=''/></create_target>"
     hidden [xml] $GetScannersXML = '<get_scanners/>'
     hidden [xml] $GetConfigXML = '<get_configs/>'
     hidden [xml] $CreateTaskXML = "<create_task><name></name><target id=''/><config id=''/><scanner id=''/></create_task>"
@@ -33,13 +34,20 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
 "@
     }
 
-    [xml] CreateTarget([string] $Name, [string[]] $Hostname) {
-            $XML = $this.CreateTargetXML
-            $XML.create_target.name = $Name
-            $XML.create_target.hosts = $Hostname -join ', '
-            Write-Host "Invoking...`n $($this.BaseCommand + '"' + $XML.OuterXml + '"')"
-            $Response = (Invoke-Expression -Command "$($this.BaseCommand + '"' + $XML.OuterXml + '"')")
-            return $Response
+    [xml] GetPortLists(){
+        Write-Host "Invoking...`n $($this.BaseCommand + '"' + $this.GetPortListsXML.OuterXml + '"')"
+        $Response = (Invoke-Expression -Command "$($this.BaseCommand + '"' + $this.GetPortListsXML.OuterXml + '"')")
+        return $Response
+    }
+
+    [xml] CreateTarget([string] $Name, [string[]] $Hostname, [string] $PortListID) {
+        $XML = $this.CreateTargetXML
+        $XML.create_target.name = $Name
+        $XML.create_target.hosts = $Hostname -join ','
+        $XML.create_target.port_list.id = $PortListID
+        Write-Host "Invoking...`n $($this.BaseCommand + "'" + $XML.OuterXml + "'")"
+        $Response = (Invoke-Expression -Command "$($this.BaseCommand + "'" + $XML.OuterXml + "'")" )
+        return $Response
     }
 
     [xml] GetScanners(){
