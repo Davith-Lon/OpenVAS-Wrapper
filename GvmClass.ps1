@@ -33,26 +33,23 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
 "@
     }
 
-    [xml] CreateTarget([string] $Name, [string] $Hostname) {
+    [xml] CreateTarget([string] $Name, [string[]] $Hostname) {
             $XML = $this.CreateTargetXML
             $XML.create_target.name = $Name
-            $XML.create_target.hosts = $Hostname
-            Write-Host "Invoking...`n $($this.BaseCommand + $XML.OuterXml)"
-            #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
-            $Response = [xml] (Invoke-Expression -Command "$($this.BaseCommand + $XML.OuterXml)")
-            return [xml] $Response
+            $XML.create_target.hosts = $Hostname -join ', '
+            Write-Host "Invoking...`n $($this.BaseCommand + '"' + $XML.OuterXml + '"')"
+            $Response = (Invoke-Expression -Command "$($this.BaseCommand + '"' + $XML.OuterXml + '"')")
+            return $Response
     }
 
     [xml] GetScanners(){
         Write-Host "Invoking...`n `"$($this.BaseCommand + $this.GetScannersXML.OuterXml)`""
-        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetScannersXML)
         $Response = (Invoke-Expression -Command "$($this.BaseCommand + '"' + $this.GetScannersXML.OuterXml + '"')")
         return $Response
     }
 
     [xml] GetConfigs(){
         Write-Host "Invoking...`n $($this.BaseCommand + $this.GetConfigXML.OuterXml)"
-        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetConfigXML)
         $Response = (Invoke-Expression -Command "$($this.BaseCommand + '"' + $this.GetConfigXML.OuterXml + '"')")
         return $Response
     }
@@ -64,34 +61,30 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
         $XML.create_task.config.id =  $ConfigID
         $XML.create_task.scanner.id = $ScannerID
         Write-Host "Invoking...`n $($this.BaseCommand + $XML.OuterXml)"
-        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
         $Response = ''
-        return [xml] $Response
+        return $Response
     }
 
     [xml] StartTask([string] $TaskID){
         $XML = $this.StartTaskXML
         $XML.start_task.task_id = $TaskID
         Write-Host "Invoking...`n $($this.BaseCommand + $XML.OuterXml)"
-        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
         $Response = ''
-        return [xml] $Response
+        return $Response
     }
 
     [xml] GetTaskStatus([string] $TaskID){
         $XML = $this.GetTaskStatusXML
         $XML.get_tasks.task_id = $TaskID
         Write-Host "Invoking...`n $($this.BaseCommand + $XML.OuterXml)"
-        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
         $Response = ''
-        return [xml] $Response
+        return $Response
     }
 
     [xml] GetReportFormat(){
         Write-Host "Invoking...`n $($this.BaseCommand + $this.GetReportFormatXML.OuterXml)"
-        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $this.GetReportFormatXML)
         $Response = ''
-        return [xml] $Response
+        return $Response
     }
 
     [xml] GetReport([string] $ReportID, [string] $FormatID){
@@ -99,8 +92,7 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
         $XML.get_reports.report_id = $ReportID
         $XML.get_reports.format_id = $FormatID
         Write-Host "Invoking...`n $($this.BaseCommand + $XML.OuterXml)"
-        #$Response = [xml](Invoke-VMScript -Script $this.BaseCommand + $XML)
         $Response = ''
-        return [xml] $Response
+        return $Response
     }
 }
