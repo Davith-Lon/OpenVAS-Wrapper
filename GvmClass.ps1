@@ -24,6 +24,7 @@ class Gvm{
     hidden [xml] $GetTaskStatus = "<get_tasks task_id=''/>"
     hidden [xml] $GetReportFormatXML = "<get_report_formats/>"
     hidden [xml] $GetReportXML = "<get_reports report_id='' format_id=''/>"
+    hidden [string] $tmpLogFile = $PSScriptRoot + '/tmpLog.log'
 
     Gvm([string]$GvmUsername, [securestring]$GvmPassword){
         $this.GvmUsername = $GvmUsername
@@ -34,26 +35,62 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
 "@
     }
 
-    [xml] GetPortLists(){
-        Write-Host "Invoking...`n $($this.BaseCommand + '"' + $this.GetPortListsXML.OuterXml + '"')"
-        $Response = (Invoke-Expression -Command "$($this.BaseCommand + '"' + $this.GetPortListsXML.OuterXml + '"')")
-        return $Response
+    [hashtable] GetPortLists(){
+        $Result = @{}
+        $Command = "$($this.BaseCommand)" + '"' +$This.GetPortListsXML.InnerXml + '" > ' + $this.tmpLogFile + " 2>&1"
+        Write-Host "Invoking...`n $Command`n"
+        try{
+            Invoke-Expression -Command $Command
+            $Response = Get-Content -Path $this.tmpLogFile -Raw
+            [xml] $Response
+            $Keys = Select-Xml -Content $Response -XPath '/get_port_lists_response/port_list/name' | ForEach-Object {"$($_.Node.InnerXml)"}
+            $Values = Select-Xml -Content $Response -XPath '/get_port_lists_response/port_list/@id' | ForEach-Object {$_}
+            $Keys | ForEach-Object {$Result[$_] = $Values[$Keys.IndexOf($_)]}
+        }
+        catch{
+            throw "Failed to GetPortLists: $(Get-Content -Path $this.tmpLogFile -Raw)"
+        }
+        return $Result
     }
 
-    [xml] CreateTarget([string] $Name, [string[]] $Hostname, [string] $PortListID) {
+    [string] CreateTarget([string] $Name, [string[]] $Hostname, [string] $PortListID) {
         $XML = $this.CreateTargetXML
         $XML.create_target.name = $Name
         $XML.create_target.hosts = $Hostname -join ','
         $XML.create_target.port_list.id = $PortListID
-        Write-Host "Invoking...`n $($this.BaseCommand + "'" + $XML.OuterXml + "'")"
-        $Response = (Invoke-Expression -Command "$($this.BaseCommand + "'" + $XML.OuterXml + "'")" )
-        return $Response
+
+        #$XML.create_target.port_list.id = $PortListID
+        $Command = "$($this.BaseCommand)" + '"' + $XML.InnerXml.Replace('"', "'") + '" > ' + $this.tmpLogFile + " 2>&1"
+        Write-Host "Invoking...`n $Command`n"
+        
+        try{
+            Invoke-Expression -Command $Command
+            $Response = Get-Content -Path $this.tmpLogFile -Raw
+            [xml] $Response
+            $Result = Select-Xml -Content $Response -XPath '/create_target_response/@id' | ForEach-Object {$_}
+        }
+        catch{
+            throw "Failed to CreateTarget: $(Get-Content -Path $this.tmpLogFile -Raw)"
+        }
+        return $Result
     }
 
-    [xml] GetScanners(){
-        Write-Host "Invoking...`n `"$($this.BaseCommand + $this.GetScannersXML.OuterXml)`""
-        $Response = (Invoke-Expression -Command "$($this.BaseCommand + '"' + $this.GetScannersXML.OuterXml + '"')")
-        return $Response
+    [hashtable] GetScanners(){
+        $Result = @{}
+        $Command = "$($this.BaseCommand)" + '"' +$This.GetScannersXML.InnerXml + '" > ' + $this.tmpLogFile + " 2>&1"
+        Write-Host "Invoking...`n $Command`n"
+        try{
+            Invoke-Expression -Command $Command
+            $Response = Get-Content -Path $this.tmpLogFile -Raw
+            [xml] $Response
+            $Keys = Select-Xml -Content $Response -XPath '/get_scanners_response/scanner/name' | ForEach-Object {"$($_.Node.InnerXml)"}
+            $Values = Select-Xml -Content $Response -XPath '/get_scanners_response/scanner/@id' | ForEach-Object {$_}
+            $Keys | ForEach-Object {$Result[$_] = $Values[$Keys.IndexOf($_)]}
+        }
+        catch{
+            throw "Failed to GetPortLists: $(Get-Content -Path $this.tmpLogFile -Raw)"
+        }
+        return $Result
     }
 
     [xml] GetConfigs(){
@@ -62,15 +99,26 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
         return $Response
     }
 
-    [xml] CreateTask([string] $Name, [string] $TargetID, [string] $ConfigID, [string] $ScannerID){
+    [string] CreateTask([string] $Name, [string] $TargetID, [string] $ConfigID, [string] $ScannerID){
+
         $XML = $this.CreateTaskXML
         $XML.create_task.name = $Name
         $XML.create_task.target.id = $TargetID
         $XML.create_task.config.id =  $ConfigID
         $XML.create_task.scanner.id = $ScannerID
-        Write-Host "Invoking...`n $($this.BaseCommand + $XML.OuterXml)"
-        $Response = ''
-        return $Response
+        $Command = "$($this.BaseCommand)" + '"' + $XML.InnerXml.Replace('"', "'") + '" > ' + $this.tmpLogFile + " 2>&1"
+        Write-Host "Invoking...`n $Command`n"
+        
+        try{
+            Invoke-Expression -Command $Command
+            $Response = Get-Content -Path $this.tmpLogFile -Raw
+            [xml] $Response
+            $Result = Select-Xml -Content $Response -XPath '/create_target_response/@id' | ForEach-Object {$_}
+        }
+        catch{
+            throw "Failed to CreateTarget: $(Get-Content -Path $this.tmpLogFile -Raw)"
+        }
+        return $Result
     }
 
     [xml] StartTask([string] $TaskID){

@@ -1,17 +1,29 @@
-$GVM = [Gvm]::new('admin', (ConvertTo-SecureString -AsPlainText '79d2abd2-84ce-48b3-a32a-46c6082517d8'))
+Import-Module ./GvmClass.ps1 -Force
 
 $TargetName = 'TDMS'
 $Targets = @('192.168.50.2', '192.168.50.215', '192.168.50.248')
 
-# Get Port List.
-$Response = $GVM.GetPortLists()
-$PortListID = ($Response.get_port_lists_response.port_list | Where-Object {$_.name -eq 'All IANA assigned TCP and UDP'} | Select-Object -Property id).id
-Write-Host "PortListID: $PortListID"
+try{
+    $GVM = [Gvm]::new('admin', (ConvertTo-SecureString -AsPlainText '79d2abd2-84ce-48b3-a32a-46c6082517d8'))
+    # Get Port List.
+    $Response = $GVM.GetPortLists()
+    $PortListID = $Response['All IANA assigned TCP and UDP']
 
-# Create Scan Target.
-$Response =  $GVM.CreateTarget($TargetName, $Targets, $PortListID)
-Write-Host $Response.create_target_response.status
-# $TDMSTargetID = $Response.
+    # Get Scanners.
+    $Response = $GVM.GetScanners()
+    $ScannerID = $Response['CVE']
+    
+    # # Create Scan Target.
+    $TargetID =  $GVM.CreateTarget($TargetName, $Targets, $PortListID)
+    Write-Host $Response
+    # $TDMSTargetID = $Response.
+}
+catch{
+    Write-Host $_
+}
+
+return 0
+
 
 # # Get Scanner ID.
 # $Response = $GVM.GetScanners()
