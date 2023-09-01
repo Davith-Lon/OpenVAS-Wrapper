@@ -8,15 +8,36 @@ try{
     # Get Port List.
     $Response = $GVM.GetPortLists()
     $PortListID = $Response['All IANA assigned TCP and UDP']
+    Write-Host "PortListID: $PortListID"
+
+    # Get Configuration ID.
+    $Response = $GVM.GetConfigs()
+    $ConfigsID = $Response['Full and fast']
+    Write-Host "ConfigID: $ConfigsID"
 
     # Get Scanners.
     $Response = $GVM.GetScanners()
     $ScannerID = $Response['CVE']
+    Write-Host "ScannerID: $ScannerID"
     
-    # # Create Scan Target.
+    # Create Scan Target.
     $TargetID =  $GVM.CreateTarget($TargetName, $Targets, $PortListID)
-    Write-Host $Response
-    # $TDMSTargetID = $Response.
+    Write-Host "TargetID: $TargetID"
+
+    # Create Scan Task.
+    $TaskID = $GVM.CreateTask("$TargetName Scan Task", $TargetID, $ConfigsID, $ScannerID)
+    Write-Host "TaskID: $TaskID"
+
+    # Start Scan Task.
+    $ReportID = $GVM.StartTask($TaskID)
+    Write-Host "ReportID: $ReportID"
+
+    #Get Report Format.
+    $Response = $GVM.GetReportFormat()
+    $ReportFormatID = $Response['CSV Results']
+
+    # Get Scan Report.
+    $GVM.GetReport($ReportID, $FormatID)
 }
 catch{
     Write-Host $_
@@ -24,31 +45,7 @@ catch{
 
 return 0
 
-
-# # Get Scanner ID.
-# $Response = $GVM.GetScanners()
-# $Scanners = $Response.get_scanners_response.scanner
-
-# $CveScannerID = ($Scanners | Where-Object {$_.name -eq 'CVE'} | Select-Object -Property id).id
-# Write-Host "CVE Scanner ID: $CveScannerID"
-
-# $DefaultScannerID = ($Scanners | Where-Object {$_.name -eq 'OpenVAS Default'} | Select-Object -Property id).id
-# Write-Host "OpenVAS Default Scanner ID: $DefaultScannerID"
-
-# # Get Configuration ID.
-# $Response = $GVM.GetConfigs()
-# $Configs = $Response.get_configs_response.config
-
-# $FullandFastConfig = ($Configs | Where-Object {$_.name -eq 'Full and fast'} | Select-Object -Property id).id
-# Write-Host "Full and Fast Config ID: $FullandFastConfig"
-
-# Create Scan Task.
-# $GVM.CreateTask("$TargetName Scan Task", 'fdfsa', '431243123', 'dfafdas342432')
-# Start Scan Task.
-# $GVM.StartTask('fdasdfas')
 # Track Scan Task.
 # $GVM.GetTaskStatus('fdasfasf34')
-# Get Report Format.
-# $GVM.GetReportFormat()
 # Get Scan Report.
 # $GVM.GetReport('fdasf', 'fdsaf24')
