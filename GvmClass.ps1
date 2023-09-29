@@ -17,6 +17,7 @@ class Gvm{
     hidden [string] $BaseCommand
     hidden [xml] $GetPortListsXML = '<get_port_lists/>'
     hidden [xml] $CreateTargetXML = "<create_target><name></name><hosts></hosts><port_list id=''/></create_target>"
+    hidden [xml] $GetTargetXML = "<get_targets filter=''/>"
     hidden [xml] $GetScannersXML = '<get_scanners/>'
     hidden [xml] $GetConfigXML = '<get_configs/>'
     hidden [xml] $CreateTaskXML = "<create_task><name></name><target id=''/><config id=''/><scanner id=''/></create_task>"
@@ -59,7 +60,17 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
         $XML.create_target.hosts = $Hostname -join ','
         $XML.create_target.port_list.id = $PortListID
 
-        #$XML.create_target.port_list.id = $PortListID
+        # Check if Target exists.
+        $Result = $this.GetTarget($Name)
+        
+        # Target Exists, return ID
+        if ($null -ne $Result -and $Result -ne ""){
+            Write-Host "Target $Name already exists"
+            return $Result
+        }
+
+        # Target doesn't Exists, so make it
+        Write-Host "Creating Target $Name"
         $Command = "$($this.BaseCommand)" + '"' + $XML.InnerXml.Replace('"', "'") + '" > ' + $this.tmpLogFile + " 2>&1"
         Write-Host "Invoking...`n $Command`n"
         
@@ -67,7 +78,7 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
             Invoke-Expression -Command $Command
             $Response = Get-Content -Path $this.tmpLogFile -Raw
             [xml] $Response
-            $Result = Select-Xml -Content $Response -XPath '/create_target_response/@id' | ForEach-Object {$_}
+            $Result = Select-Xml -Content $Response -XPath '/create_target_response/@id'
         }
         catch{
             throw "Failed to CreateTarget: $(Get-Content -Path $this.tmpLogFile -Raw)"
@@ -147,10 +158,9 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
             $Result = Select-Xml -Content $Response -XPath '/start_task_response/report_id' | ForEach-Object {"$($_.Node.InnerXml)"}
         }
         catch{
-            throw "Failed to CreateTarget: $(Get-Content -Path $this.tmpLogFile -Raw)"
+            throw "Failed to StartTarget: $(Get-Content -Path $this.tmpLogFile -Raw)"
         }
         return $Result
-
     }
 
     [xml] GetTaskStatus([string] $TaskID){
@@ -180,6 +190,28 @@ sudo -u _gvm gvm-cli --gmp-username $GvmUsername --gmp-password $PlainPass socke
         catch{
             throw "Failed to GetReportFormat: $(Get-Content -Path $this.tmpLogFile -Raw)"
         }
+        return $Result
+    }
+
+    [string] GetTarget([string] $Name){
+
+        $XML = $this.GetTargetXML
+        $XML.get_targets.filter = "name=$Name"
+        $Command = "$($this.BaseCommand)" + '"' + $XML.InnerXml.Replace('"', "'") + '" > ' + $this.tmpLogFile + " 2>&1"
+
+        try{
+            Invoke-Expression -Command $Command
+            $Response = Get-Content -Path $this.tmpLogFile -Raw
+            [xml] $Response
+            $Result = ((Select-Xml -Content $Response -XPath '/get_targets_response/target/@id').Node.Value)
+            if($null -eq $Result -or $Result -eq ""){
+                Write-Host "Target $Name does not exist"
+            }
+        }
+        catch{
+            throw "Failed to GetTarget: $(Get-Content -Path $this.tmpLogFile -Raw)"
+        }
+
         return $Result
     }
 
